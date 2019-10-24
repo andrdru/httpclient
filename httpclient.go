@@ -16,13 +16,13 @@ type (
 			method string,
 			path string,
 			param *map[string]string,
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, body []byte, err error)
 		Request(
 			method string,
 			path string,
 			param []byte,
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, body []byte, err error)
 	}
 
@@ -61,7 +61,7 @@ func (c *httpClient) RequestNoBody(
 	method string,
 	path string,
 	param *map[string]string,
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, body []byte, err error) {
 	u := url.URL{
 		Scheme: c.scheme,
@@ -89,7 +89,7 @@ func (c *httpClient) Request(
 	method string,
 	path string,
 	param []byte,
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, body []byte, err error) {
 	u := url.URL{
 		Scheme: c.scheme,
@@ -106,11 +106,9 @@ func (c *httpClient) Request(
 	return c.request(req, header)
 }
 
-func (c *httpClient) request(req *http.Request, header *map[string]string) (statusCode int, body []byte, err error) {
+func (c *httpClient) request(req *http.Request, header *http.Header) (statusCode int, body []byte, err error) {
 	if header != nil {
-		for key, val := range *header {
-			req.Header.Set(key, val)
-		}
+		req.Header = *header
 	}
 
 	rs, err := c.client.Do(req)

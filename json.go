@@ -11,27 +11,27 @@ type (
 		Delete(
 			path string,
 			param *map[string]string,
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, res interface{}, err error)
 		Get(
 			path string,
 			param *map[string]string,
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, res interface{}, err error)
 		Patch(
 			path string,
 			param *map[string]interface{},
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, res interface{}, err error)
 		Post(
 			path string,
 			param *map[string]interface{},
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, res interface{}, err error)
 		Put(
 			path string,
 			param *map[string]interface{},
-			header *map[string]string,
+			header *http.Header,
 		) (statusCode int, res interface{}, err error)
 	}
 
@@ -49,7 +49,7 @@ func NewJsonClient(scheme string, host string, timeout time.Duration, options ..
 func (c *jsonClient) Delete(
 	path string,
 	param *map[string]string,
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	return c.requestNoBody(http.MethodDelete, path, param, header)
 }
@@ -57,7 +57,7 @@ func (c *jsonClient) Delete(
 func (c *jsonClient) Get(
 	path string,
 	param *map[string]string,
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	return c.requestNoBody(http.MethodGet, path, param, header)
 }
@@ -65,7 +65,7 @@ func (c *jsonClient) Get(
 func (c *jsonClient) Patch(
 	path string,
 	param *map[string]interface{},
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	return c.request(http.MethodPatch, path, param, header)
 }
@@ -73,7 +73,7 @@ func (c *jsonClient) Patch(
 func (c *jsonClient) Post(
 	path string,
 	param *map[string]interface{},
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	return c.request(http.MethodPost, path, param, header)
 }
@@ -81,7 +81,7 @@ func (c *jsonClient) Post(
 func (c *jsonClient) Put(
 	path string,
 	param *map[string]interface{},
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	return c.request(http.MethodPut, path, param, header)
 }
@@ -90,7 +90,7 @@ func (c *jsonClient) request(
 	method string,
 	path string,
 	param *map[string]interface{},
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	var body []byte
 	if param != nil {
@@ -116,7 +116,7 @@ func (c *jsonClient) requestNoBody(
 	method string,
 	path string,
 	param *map[string]string,
-	header *map[string]string,
+	header *http.Header,
 ) (statusCode int, res interface{}, err error) {
 	var body []byte
 	statusCode, body, err = c.HttpClient.RequestNoBody(method, path, param, header)
