@@ -6,32 +6,63 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type (
 	HttpClient interface {
-		RequestNoBody(method string, path string, param *map[string]string, header *map[string]string) (statusCode int, body []byte, err error)
-		Request(method string, path string, param []byte, header *map[string]string) (statusCode int, body []byte, err error)
+		RequestNoBody(
+			method string,
+			path string,
+			param *map[string]string,
+			header *map[string]string,
+		) (statusCode int, body []byte, err error)
+		Request(
+			method string,
+			path string,
+			param []byte,
+			header *map[string]string,
+		) (statusCode int, body []byte, err error)
 	}
 
 	httpClient struct {
 		client http.Client
 		scheme string
 		host   string
+		log    Logger
 	}
 )
 
-func NewHttpClient(scheme string, host string, timeout time.Duration) *httpClient {
+const (
+	closeError = "close fails"
+)
+
+func NewHttpClient(scheme string, host string, timeout time.Duration, options ...Option) *httpClient {
+	args := &Options{
+		log: NewNopLogger(),
+	}
+
+	for _, opt := range options {
+		opt(args)
+	}
+
 	return &httpClient{
 		scheme: scheme,
 		host:   host,
 		client: http.Client{
 			Timeout: timeout,
 		},
+		log: args.log,
 	}
 }
 
-func (c *httpClient) RequestNoBody(method string, path string, param *map[string]string, header *map[string]string) (statusCode int, body []byte, err error) {
+func (c *httpClient) RequestNoBody(
+	method string,
+	path string,
+	param *map[string]string,
+	header *map[string]string,
+) (statusCode int, body []byte, err error) {
 	u := url.URL{
 		Scheme: c.scheme,
 		Host:   c.host,
@@ -54,7 +85,12 @@ func (c *httpClient) RequestNoBody(method string, path string, param *map[string
 	return c.request(req, header)
 }
 
-func (c *httpClient) Request(method string, path string, param []byte, header *map[string]string) (statusCode int, body []byte, err error) {
+func (c *httpClient) Request(
+	method string,
+	path string,
+	param []byte,
+	header *map[string]string,
+) (statusCode int, body []byte, err error) {
 	u := url.URL{
 		Scheme: c.scheme,
 		Host:   c.host,
@@ -83,7 +119,9 @@ func (c *httpClient) request(req *http.Request, header *map[string]string) (stat
 	}
 
 	defer func() {
-		_ = rs.Body.Close()
+		if err := rs.Body.Close(); err != nil {
+			c.warnErr(errors.Wrap(err, closeError))
+		}
 	}()
 
 	statusCode = rs.StatusCode
@@ -93,4 +131,8 @@ func (c *httpClient) request(req *http.Request, header *map[string]string) (stat
 	}
 
 	return statusCode, body, nil
+}
+
+func (c *httpClient) warnErr(err error) {
+	c.log.Println(err.Error())
 }
