@@ -15,14 +15,14 @@ type (
 		RequestNoBody(
 			method string,
 			path string,
-			param *map[string]string,
-			header *http.Header,
+			param map[string]string,
+			header http.Header,
 		) (statusCode int, body []byte, err error)
 		Request(
 			method string,
 			path string,
 			param []byte,
-			header *http.Header,
+			header http.Header,
 		) (statusCode int, body []byte, err error)
 	}
 
@@ -60,8 +60,8 @@ func NewHttpClient(scheme string, host string, timeout time.Duration, options ..
 func (c *httpClient) RequestNoBody(
 	method string,
 	path string,
-	param *map[string]string,
-	header *http.Header,
+	param map[string]string,
+	header http.Header,
 ) (statusCode int, body []byte, err error) {
 	u := url.URL{
 		Scheme: c.scheme,
@@ -71,7 +71,7 @@ func (c *httpClient) RequestNoBody(
 
 	if param != nil {
 		q := u.Query()
-		for key, val := range *param {
+		for key, val := range param {
 			q.Add(key, val)
 		}
 		u.RawQuery = q.Encode()
@@ -89,7 +89,7 @@ func (c *httpClient) Request(
 	method string,
 	path string,
 	param []byte,
-	header *http.Header,
+	header http.Header,
 ) (statusCode int, body []byte, err error) {
 	u := url.URL{
 		Scheme: c.scheme,
@@ -106,9 +106,9 @@ func (c *httpClient) Request(
 	return c.request(req, header)
 }
 
-func (c *httpClient) request(req *http.Request, header *http.Header) (statusCode int, body []byte, err error) {
+func (c *httpClient) request(req *http.Request, header http.Header) (statusCode int, body []byte, err error) {
 	if header != nil {
-		req.Header = *header
+		req.Header = header
 	}
 
 	rs, err := c.client.Do(req)
