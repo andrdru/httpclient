@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type (
@@ -118,7 +116,7 @@ func (c *httpClient) request(req *http.Request, header http.Header) (statusCode 
 
 	defer func() {
 		if err := rs.Body.Close(); err != nil {
-			c.warnErr(errors.Wrap(err, closeError))
+			c.warnErr(wrapErr(err, closeError))
 		}
 	}()
 
