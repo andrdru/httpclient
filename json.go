@@ -3,7 +3,6 @@ package httpclient
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 )
 
 type (
@@ -40,9 +39,9 @@ type (
 	}
 )
 
-func NewJsonClient(scheme string, host string, timeout time.Duration, options ...Option) *jsonClient {
+func NewJsonClient(host string, options ...Option) *jsonClient {
 	return &jsonClient{
-		HttpClient: NewHttpClient(scheme, host, timeout, options...),
+		HttpClient: NewHttpClient(host, options...),
 	}
 }
 

@@ -6,7 +6,7 @@ golang net/http wrapper
 ### Examples
 
 ```go
-client := httpclient.NewHttpClient("https", "jsonplaceholder.typicode.com", 5*time.Second)
+client := httpclient.NewHttpClient("jsonplaceholder.typicode.com")
 	statusCode, res, err := client.Request(http.MethodGet, "/posts", nil, nil)
 
 	fmt.Println(statusCode, res, err) // 200 [<bytes>] <nil>
@@ -17,7 +17,7 @@ client := httpclient.NewHttpClient("https", "jsonplaceholder.typicode.com", 5*ti
 ### Examples
 Post request
 ```go
-client := httpclient.NewJsonClient("https", "jsonplaceholder.typicode.com", 5*time.Second)
+client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
 	statusCode, res, err := client.Post("/posts",
 		&map[string]interface{}{
 			"test": 101,
@@ -30,7 +30,7 @@ client := httpclient.NewJsonClient("https", "jsonplaceholder.typicode.com", 5*ti
 
 Returning json object
 ```go
-client := httpclient.NewJsonClient("https", "jsonplaceholder.typicode.com", 5*time.Second)
+client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
 	statusCode, res, err := client.Get("/posts/1", nil, nil)
 
 	if r, ok := res.(map[string]interface{}); ok {
@@ -40,7 +40,7 @@ client := httpclient.NewJsonClient("https", "jsonplaceholder.typicode.com", 5*ti
 
 Returning json array
 ```go
-client := httpclient.NewJsonClient("https", "jsonplaceholder.typicode.com", 5*time.Second)
+client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
 	statusCode, res, err := client.Get("/posts", nil, nil)
 
 	if r, ok := res.([]interface{}); ok {

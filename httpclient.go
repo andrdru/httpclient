@@ -34,11 +34,16 @@ type (
 
 const (
 	closeError = "close fails"
+
+	TimeoutDefault = 5 * time.Second
+	SchemeDefault  = "https"
 )
 
-func NewHttpClient(scheme string, host string, timeout time.Duration, options ...Option) *httpClient {
+func NewHttpClient(host string, options ...Option) *httpClient {
 	args := &Options{
-		log: NewNopLogger(),
+		log:     NewNopLogger(),
+		timeout: TimeoutDefault,
+		scheme:  SchemeDefault,
 	}
 
 	for _, opt := range options {
@@ -46,10 +51,10 @@ func NewHttpClient(scheme string, host string, timeout time.Duration, options ..
 	}
 
 	return &httpClient{
-		scheme: scheme,
 		host:   host,
+		scheme: args.scheme,
 		client: http.Client{
-			Timeout: timeout,
+			Timeout: args.timeout,
 		},
 		log: args.log,
 	}
