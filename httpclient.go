@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -11,12 +12,14 @@ import (
 type (
 	HttpClient interface {
 		RequestNoBody(
+			ctx context.Context,
 			method string,
 			path string,
 			param map[string]string,
 			header http.Header,
 		) (statusCode int, body []byte, err error)
 		Request(
+			ctx context.Context,
 			method string,
 			path string,
 			param []byte,
@@ -61,6 +64,7 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 }
 
 func (c *httpClient) RequestNoBody(
+	ctx context.Context,
 	method string,
 	path string,
 	param map[string]string,
@@ -80,7 +84,7 @@ func (c *httpClient) RequestNoBody(
 		u.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequest(method, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), nil)
 	if err != nil {
 		return 0, []byte{}, err
 	}
@@ -89,6 +93,7 @@ func (c *httpClient) RequestNoBody(
 }
 
 func (c *httpClient) Request(
+	ctx context.Context,
 	method string,
 	path string,
 	param []byte,
@@ -101,7 +106,7 @@ func (c *httpClient) Request(
 	}
 
 	r := bytes.NewReader(param)
-	req, err := http.NewRequest(method, u.String(), r)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), r)
 	if err != nil {
 		return 0, []byte{}, err
 	}
