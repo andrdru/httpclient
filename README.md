@@ -7,7 +7,7 @@ golang net/http wrapper
 
 ```go
 client := httpclient.NewHttpClient("jsonplaceholder.typicode.com")
-	statusCode, res, err := client.Request(http.MethodGet, "/posts", nil, nil)
+	statusCode, res, err := client.Request(context.Background(), http.MethodGet, "/posts", nil, nil)
 
 	fmt.Println(statusCode, res, err) // 200 [<bytes>] <nil>
 ```
@@ -18,7 +18,7 @@ client := httpclient.NewHttpClient("jsonplaceholder.typicode.com")
 Post request
 ```go
 client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
-	statusCode, res, err := client.Post("/posts",
+	statusCode, res, err := client.Post(context.Background(), "/posts",
 		&map[string]interface{}{
 			"test": 101,
 		}, nil)
@@ -31,7 +31,7 @@ client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
 Returning json object
 ```go
 client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
-	statusCode, res, err := client.Get("/posts/1", nil, nil)
+	statusCode, res, err := client.Get(context.Background(), "/posts/1", nil, nil)
 
 	if r, ok := res.(map[string]interface{}); ok {
 		fmt.Println(statusCode, r, err) // 200 <map> <nil>
@@ -41,7 +41,7 @@ client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
 Returning json array
 ```go
 client := httpclient.NewJsonClient("jsonplaceholder.typicode.com")
-	statusCode, res, err := client.Get("/posts", nil, nil)
+	statusCode, res, err := client.Get(context.Background(), "/posts", nil, nil)
 
 	if r, ok := res.([]interface{}); ok {
 		fmt.Println(statusCode, r, err) // 200 <slice> <nil>
