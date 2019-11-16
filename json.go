@@ -45,6 +45,11 @@ type (
 	}
 )
 
+const (
+	headerContentType        = "Content-Type"
+	headerContentTypeDefault = "application/json"
+)
+
 func NewJsonClient(host string, options ...Option) *jsonClient {
 	return &jsonClient{
 		HttpClient: NewHttpClient(host, options...),
@@ -110,6 +115,11 @@ func (c *jsonClient) request(
 			return 0, nil, err
 		}
 	}
+
+	if header.Get(headerContentType) == "" {
+		header.Set(headerContentType, headerContentTypeDefault)
+	}
+
 	statusCode, body, err = c.HttpClient.Request(ctx, method, path, body, header)
 	if err != nil {
 		return 0, nil, err
@@ -131,6 +141,11 @@ func (c *jsonClient) requestNoBody(
 	header http.Header,
 ) (statusCode int, res interface{}, err error) {
 	var body []byte
+
+	if header.Get(headerContentType) == "" {
+		header.Set(headerContentType, headerContentTypeDefault)
+	}
+
 	statusCode, body, err = c.HttpClient.RequestNoBody(ctx, method, path, param, header)
 	if err != nil {
 		return 0, nil, err
