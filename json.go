@@ -116,6 +116,10 @@ func (c *jsonClient) request(
 		}
 	}
 
+	if header == nil {
+		header = http.Header{}
+	}
+
 	if header.Get(headerContentType) == "" {
 		header.Set(headerContentType, headerContentTypeDefault)
 	}
@@ -141,6 +145,10 @@ func (c *jsonClient) requestNoBody(
 	header http.Header,
 ) (statusCode int, res interface{}, err error) {
 	var body []byte
+
+	if header == nil {
+		header = http.Header{}
+	}
 
 	if header.Get(headerContentType) == "" {
 		header.Set(headerContentType, headerContentTypeDefault)
