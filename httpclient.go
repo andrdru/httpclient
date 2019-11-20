@@ -120,15 +120,17 @@ func (c *httpClient) request(req *http.Request, header http.Header) (statusCode 
 	}
 
 	rs, err := c.client.Do(req)
+	if rs != nil {
+		defer func() {
+			if err := rs.Body.Close(); err != nil {
+				c.warnErr(wrapErr(err, closeError))
+			}
+		}()
+	}
+
 	if err != nil {
 		return 0, []byte{}, err
 	}
-
-	defer func() {
-		if err := rs.Body.Close(); err != nil {
-			c.warnErr(wrapErr(err, closeError))
-		}
-	}()
 
 	statusCode = rs.StatusCode
 	body, err = ioutil.ReadAll(rs.Body)
