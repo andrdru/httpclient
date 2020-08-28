@@ -4,9 +4,10 @@ import "time"
 
 type (
 	Options struct {
-		log     Logger
-		timeout time.Duration
-		scheme  string
+		log       Logger
+		timeout   time.Duration
+		scheme    string
+		rateLimit RateLimiter
 	}
 
 	Option func(*Options)
@@ -27,5 +28,11 @@ func Timeout(timeout time.Duration) Option {
 func Scheme(scheme string) Option {
 	return func(args *Options) {
 		args.scheme = scheme
+	}
+}
+
+func RateLimit(requests int64, period time.Duration) Option {
+	return func(args *Options) {
+		args.rateLimit = NewRateLimit(requests, period)
 	}
 }

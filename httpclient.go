@@ -28,28 +28,31 @@ type (
 	}
 
 	httpClient struct {
-		client http.Client
-		scheme string
-		host   string
-		log    Logger
+		client    http.Client
+		scheme    string
+		host      string
+		log       Logger
+		rateLimit RateLimiter
 	}
 )
 
 const (
 	closeError = "close fails"
 
-	TimeoutDefault = 5 * time.Second
+	TimeoutDefault = 30 * time.Second
 	SchemeDefault  = "https"
 )
 
 func NewHttpClient(host string, options ...Option) *httpClient {
-	args := &Options{
-		log:     NewNopLogger(),
-		timeout: TimeoutDefault,
-		scheme:  SchemeDefault,
+	var args = &Options{
+		log:       NewNopLogger(),
+		timeout:   TimeoutDefault,
+		scheme:    SchemeDefault,
+		rateLimit: NewNopRateLimit(),
 	}
 
-	for _, opt := range options {
+	var opt Option
+	for _, opt = range options {
 		opt(args)
 	}
 
@@ -70,21 +73,23 @@ func (c *httpClient) RequestNoBody(
 	param map[string]string,
 	header http.Header,
 ) (statusCode int, body []byte, err error) {
-	u := url.URL{
+	var u = url.URL{
 		Scheme: c.scheme,
 		Host:   c.host,
 		Path:   path,
 	}
 
 	if param != nil {
-		q := u.Query()
-		for key, val := range param {
+		var q = u.Query()
+		var key, val string
+		for key, val = range param {
 			q.Add(key, val)
 		}
 		u.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, u.String(), nil)
+	var req *http.Request
+	req, err = http.NewRequestWithContext(ctx, method, u.String(), nil)
 	if err != nil {
 		return 0, []byte{}, err
 	}
@@ -99,14 +104,15 @@ func (c *httpClient) Request(
 	param []byte,
 	header http.Header,
 ) (statusCode int, body []byte, err error) {
-	u := url.URL{
+	var u = url.URL{
 		Scheme: c.scheme,
 		Host:   c.host,
 		Path:   path,
 	}
 
-	r := bytes.NewReader(param)
-	req, err := http.NewRequestWithContext(ctx, method, u.String(), r)
+	var r = bytes.NewReader(param)
+	var req *http.Request
+	req, err = http.NewRequestWithContext(ctx, method, u.String(), r)
 	if err != nil {
 		return 0, []byte{}, err
 	}
@@ -115,14 +121,17 @@ func (c *httpClient) Request(
 }
 
 func (c *httpClient) request(req *http.Request, header http.Header) (statusCode int, body []byte, err error) {
+	c.rateLimit.Take()
+
 	if header != nil {
 		req.Header = header
 	}
 
-	rs, err := c.client.Do(req)
+	var rs *http.Response
+	rs, err = c.client.Do(req)
 	if rs != nil {
 		defer func() {
-			if err := rs.Body.Close(); err != nil {
+			if err = rs.Body.Close(); err != nil {
 				c.warnErr(wrapErr(err, closeError))
 			}
 		}()
