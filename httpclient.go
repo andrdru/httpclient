@@ -62,7 +62,8 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		client: http.Client{
 			Timeout: args.timeout,
 		},
-		log: args.log,
+		log:       args.log,
+		rateLimit: args.rateLimit,
 	}
 }
 
