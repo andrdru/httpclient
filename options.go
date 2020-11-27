@@ -4,10 +4,11 @@ import "time"
 
 type (
 	Options struct {
-		log       Logger
-		timeout   time.Duration
-		scheme    string
-		rateLimit RateLimiter
+		log         Logger
+		timeout     time.Duration
+		scheme      string
+		rateLimit   RateLimiter
+		loggerLevel LoggerLevel
 	}
 
 	Option func(*Options)
@@ -16,6 +17,12 @@ type (
 func Log(log Logger) Option {
 	return func(args *Options) {
 		args.log = log
+	}
+}
+
+func LogLevel(level LoggerLevel) Option {
+	return func(args *Options) {
+		args.loggerLevel = level
 	}
 }
 
