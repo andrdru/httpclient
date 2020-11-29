@@ -24,6 +24,6 @@ func NewNopLogger() *nopLogger {
 func (n *nopLogger) Printf(format string, v ...interface{}) {
 }
 
-func (l LoggerLevel) Allowed(level LoggerLevel) bool {
-	return level >= l
+func (l LoggerLevel) IsAllowedForLevel(level LoggerLevel) bool {
+	return l >= level
 }

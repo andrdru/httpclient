@@ -158,13 +158,13 @@ func (c *httpClient) request(req *http.Request, header http.Header) (statusCode 
 }
 
 func (c *httpClient) errorLog(format string, values ...interface{}) {
-	if c.logLevel.Allowed(LoggerLevelError) {
+	if c.logLevel.IsAllowedForLevel(LoggerLevelError) {
 		c.log.Printf(format, values...)
 	}
 }
 
 func (c *httpClient) infoLog(format string, values ...interface{}) {
-	if !c.logLevel.Allowed(LoggerLevelInfo) {
+	if !c.logLevel.IsAllowedForLevel(LoggerLevelInfo) {
 		return
 	}
 
