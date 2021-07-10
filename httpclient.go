@@ -99,6 +99,11 @@ func (c *httpClient) RequestNoBody(
 		return 0, []byte{}, err
 	}
 
+	var hostReplace string
+	if hostReplace = getHostReplaceCtx(ctx); hostReplace != "" {
+		req.URL.Host = hostReplace
+	}
+
 	return c.request(req, header)
 }
 
@@ -120,6 +125,11 @@ func (c *httpClient) Request(
 	req, err = http.NewRequestWithContext(ctx, method, u.String(), r)
 	if err != nil {
 		return 0, []byte{}, err
+	}
+
+	var hostReplace string
+	if hostReplace = getHostReplaceCtx(ctx); hostReplace != "" {
+		req.URL.Host = hostReplace
 	}
 
 	return c.request(req, header)
