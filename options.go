@@ -1,14 +1,19 @@
 package httpclient
 
-import "time"
+import (
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 type (
 	Options struct {
-		log         Logger
-		timeout     time.Duration
-		scheme      string
-		rateLimit   RateLimiter
-		loggerLevel LoggerLevel
+		log           Logger
+		timeout       time.Duration
+		scheme        string
+		rateLimit     RateLimiter
+		loggerLevel   LoggerLevel
+		metricHandler func(methodPath string) prometheus.Observer
 	}
 
 	Option func(*Options)
@@ -41,5 +46,11 @@ func Scheme(scheme string) Option {
 func RateLimit(requests int64, period time.Duration) Option {
 	return func(args *Options) {
 		args.rateLimit = NewRateLimit(requests, period)
+	}
+}
+
+func MetricHandler(metricHandler func(methodPath string) prometheus.Observer) Option {
+	return func(args *Options) {
+		args.metricHandler = metricHandler
 	}
 }

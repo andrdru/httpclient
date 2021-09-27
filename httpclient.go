@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type (
@@ -29,12 +31,13 @@ type (
 	}
 
 	httpClient struct {
-		client    http.Client
-		scheme    string
-		host      string
-		log       Logger
-		logLevel  LoggerLevel
-		rateLimit RateLimiter
+		client        http.Client
+		scheme        string
+		host          string
+		log           Logger
+		logLevel      LoggerLevel
+		rateLimit     RateLimiter
+		metricHandler func(methodPath string) prometheus.Observer
 	}
 )
 
@@ -52,6 +55,9 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		timeout:     TimeoutDefault,
 		scheme:      SchemeDefault,
 		rateLimit:   NewNopRateLimit(),
+		metricHandler: func(methodPath string) prometheus.Observer {
+			return NewNopObserver()
+		},
 	}
 
 	var opt Option
@@ -65,9 +71,10 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		client: http.Client{
 			Timeout: args.timeout,
 		},
-		log:       args.log,
-		logLevel:  args.loggerLevel,
-		rateLimit: args.rateLimit,
+		log:           args.log,
+		logLevel:      args.loggerLevel,
+		rateLimit:     args.rateLimit,
+		metricHandler: args.metricHandler,
 	}
 }
 
@@ -127,6 +134,10 @@ func (c *httpClient) Request(
 
 func (c *httpClient) request(req *http.Request, header http.Header) (statusCode int, body []byte, err error) {
 	c.rateLimit.Take()
+
+	defer func(startedAt time.Time) {
+		c.metricHandler(req.Method + req.URL.Path).Observe(time.Since(startedAt).Seconds())
+	}(time.Now())
 
 	if header != nil {
 		req.Header = header
