@@ -1,6 +1,9 @@
 package httpclient
 
 type (
+	Observer interface {
+		Observe(float64)
+	}
 	nopObserver struct {
 	}
 )

@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type (
@@ -37,7 +35,7 @@ type (
 		log           Logger
 		logLevel      LoggerLevel
 		rateLimit     RateLimiter
-		metricHandler func(methodPath string) prometheus.Observer
+		metricHandler func(methodPath string) Observer
 	}
 )
 
@@ -55,7 +53,7 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		timeout:     TimeoutDefault,
 		scheme:      SchemeDefault,
 		rateLimit:   NewNopRateLimit(),
-		metricHandler: func(methodPath string) prometheus.Observer {
+		metricHandler: func(methodPath string) Observer {
 			return NewNopObserver()
 		},
 	}
