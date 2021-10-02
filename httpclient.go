@@ -29,13 +29,22 @@ type (
 	}
 
 	httpClient struct {
-		client        http.Client
-		scheme        string
-		host          string
-		log           Logger
-		logLevel      LoggerLevel
-		rateLimit     RateLimiter
-		metricHandler func(methodPath string) Observer
+		client    http.Client
+		scheme    string
+		host      string
+		log       Logger
+		logLevel  LoggerLevel
+		rateLimit RateLimiter
+
+		requestMetricHandler func(
+			req *http.Request, header http.Header,
+			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+		) (statusCode int, body []byte, err error)
+
+		latencyMetricHandler func(
+			req *http.Request, header http.Header,
+			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+		) (statusCode int, body []byte, err error)
 	}
 )
 
@@ -53,8 +62,17 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		timeout:     TimeoutDefault,
 		scheme:      SchemeDefault,
 		rateLimit:   NewNopRateLimit(),
-		metricHandler: func(methodPath string) Observer {
-			return NewNopObserver()
+		requestMetricHandler: func(
+			req *http.Request, header http.Header,
+			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+		) (statusCode int, body []byte, err error) {
+			return h(req, header)
+		},
+		latencyMetricHandler: func(
+			req *http.Request, header http.Header,
+			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+		) (statusCode int, body []byte, err error) {
+			return h(req, header)
 		},
 	}
 
@@ -69,10 +87,11 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		client: http.Client{
 			Timeout: args.timeout,
 		},
-		log:           args.log,
-		logLevel:      args.loggerLevel,
-		rateLimit:     args.rateLimit,
-		metricHandler: args.metricHandler,
+		log:                  args.log,
+		logLevel:             args.loggerLevel,
+		rateLimit:            args.rateLimit,
+		requestMetricHandler: args.requestMetricHandler,
+		latencyMetricHandler: args.latencyMetricHandler,
 	}
 }
 
@@ -131,39 +150,41 @@ func (c *httpClient) Request(
 }
 
 func (c *httpClient) request(req *http.Request, header http.Header) (statusCode int, body []byte, err error) {
-	c.rateLimit.Take()
+	return c.requestMetricHandler(req, header,
+		func(req *http.Request, header http.Header) (statusCode int, body []byte, err error) {
+			c.rateLimit.Take()
 
-	defer func(startedAt time.Time) {
-		c.metricHandler(req.Method + req.URL.Path).Observe(time.Since(startedAt).Seconds())
-	}(time.Now())
+			return c.latencyMetricHandler(req, header,
+				func(req *http.Request, header http.Header) (statusCode int, body []byte, err error) {
+					if header != nil {
+						req.Header = header
+					}
+					c.infoLog("http request: %s\n", req)
 
-	if header != nil {
-		req.Header = header
-	}
-	c.infoLog("http request: %s\n", req)
+					var rs *http.Response
+					rs, err = c.client.Do(req)
+					if err != nil {
+						c.errorLog("http request error: %s\n", err.Error())
+						return 0, []byte{}, err
+					}
 
-	var rs *http.Response
-	rs, err = c.client.Do(req)
-	if err != nil {
-		c.errorLog("http request error: %s\n", err.Error())
-		return 0, []byte{}, err
-	}
+					defer func() {
+						if err = rs.Body.Close(); err != nil {
+							c.errorLog("http body close error %s\n", wrapErr(err, closeError).Error())
+						}
+					}()
 
-	defer func() {
-		if err = rs.Body.Close(); err != nil {
-			c.errorLog("http body close error %s\n", wrapErr(err, closeError).Error())
-		}
-	}()
+					statusCode = rs.StatusCode
+					body, err = ioutil.ReadAll(rs.Body)
+					if err != nil {
+						c.errorLog("http body read error: %s\n", err.Error())
+						return 0, []byte{}, err
+					}
+					c.infoLog("http response: %s\n", string(body))
 
-	statusCode = rs.StatusCode
-	body, err = ioutil.ReadAll(rs.Body)
-	if err != nil {
-		c.errorLog("http body read error: %s\n", err.Error())
-		return 0, []byte{}, err
-	}
-	c.infoLog("http response: %s\n", string(body))
-
-	return statusCode, body, nil
+					return statusCode, body, nil
+				})
+		})
 }
 
 func (c *httpClient) errorLog(format string, values ...interface{}) {

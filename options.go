@@ -1,17 +1,27 @@
 package httpclient
 
 import (
+	"net/http"
 	"time"
 )
 
 type (
 	Options struct {
-		log           Logger
-		timeout       time.Duration
-		scheme        string
-		rateLimit     RateLimiter
-		loggerLevel   LoggerLevel
-		metricHandler func(methodPath string) Observer
+		log         Logger
+		timeout     time.Duration
+		scheme      string
+		rateLimit   RateLimiter
+		loggerLevel LoggerLevel
+
+		requestMetricHandler func(
+			req *http.Request, header http.Header,
+			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+		) (statusCode int, body []byte, err error)
+
+		latencyMetricHandler func(
+			req *http.Request, header http.Header,
+			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+		) (statusCode int, body []byte, err error)
 	}
 
 	Option func(*Options)
@@ -47,8 +57,24 @@ func RateLimit(requests int64, period time.Duration) Option {
 	}
 }
 
-func MetricHandler(metricHandler func(methodPath string) Observer) Option {
+func RequestMetricHandler(
+	metricHandler func(
+		req *http.Request, header http.Header,
+		h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+	) (statusCode int, body []byte, err error),
+) Option {
 	return func(args *Options) {
-		args.metricHandler = metricHandler
+		args.requestMetricHandler = metricHandler
+	}
+}
+
+func LatencyMetricHandler(
+	metricHandler func(
+		req *http.Request, header http.Header,
+		h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
+	) (statusCode int, body []byte, err error),
+) Option {
+	return func(args *Options) {
+		args.latencyMetricHandler = metricHandler
 	}
 }
