@@ -74,6 +74,7 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		) (statusCode int, body []byte, err error) {
 			return h(req, header)
 		},
+		roundTripper: http.DefaultTransport,
 	}
 
 	var opt Option
@@ -85,7 +86,8 @@ func NewHttpClient(host string, options ...Option) *httpClient {
 		host:   host,
 		scheme: args.scheme,
 		client: http.Client{
-			Timeout: args.timeout,
+			Timeout:   args.timeout,
+			Transport: args.roundTripper,
 		},
 		log:                  args.log,
 		logLevel:             args.loggerLevel,

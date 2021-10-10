@@ -22,6 +22,8 @@ type (
 			req *http.Request, header http.Header,
 			h func(req *http.Request, header http.Header) (statusCode int, body []byte, err error),
 		) (statusCode int, body []byte, err error)
+
+		roundTripper http.RoundTripper
 	}
 
 	Option func(*Options)
@@ -76,5 +78,11 @@ func LatencyMetricHandler(
 ) Option {
 	return func(args *Options) {
 		args.latencyMetricHandler = metricHandler
+	}
+}
+
+func RoundTripper(roundTripper http.RoundTripper) Option {
+	return func(args *Options) {
+		args.roundTripper = roundTripper
 	}
 }
