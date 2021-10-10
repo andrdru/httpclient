@@ -23,19 +23,19 @@ type (
 		Patch(
 			ctx context.Context,
 			path string,
-			param map[string]interface{},
+			param json.Marshaler,
 			header http.Header,
 		) (statusCode int, body []byte, err error)
 		Post(
 			ctx context.Context,
 			path string,
-			param map[string]interface{},
+			param json.Marshaler,
 			header http.Header,
 		) (statusCode int, body []byte, err error)
 		Put(
 			ctx context.Context,
 			path string,
-			param map[string]interface{},
+			param json.Marshaler,
 			header http.Header,
 		) (statusCode int, body []byte, err error)
 	}
@@ -77,7 +77,7 @@ func (c *jsonClient) Get(
 func (c *jsonClient) Patch(
 	ctx context.Context,
 	path string,
-	param map[string]interface{},
+	param json.Marshaler,
 	header http.Header,
 ) (statusCode int, body []byte, err error) {
 	return c.request(ctx, http.MethodPatch, path, param, header)
@@ -86,7 +86,7 @@ func (c *jsonClient) Patch(
 func (c *jsonClient) Post(
 	ctx context.Context,
 	path string,
-	param map[string]interface{},
+	param json.Marshaler,
 	header http.Header,
 ) (statusCode int, body []byte, err error) {
 	return c.request(ctx, http.MethodPost, path, param, header)
@@ -95,7 +95,7 @@ func (c *jsonClient) Post(
 func (c *jsonClient) Put(
 	ctx context.Context,
 	path string,
-	param map[string]interface{},
+	param json.Marshaler,
 	header http.Header,
 ) (statusCode int, body []byte, err error) {
 	return c.request(ctx, http.MethodPut, path, param, header)
@@ -105,7 +105,7 @@ func (c *jsonClient) request(
 	ctx context.Context,
 	method string,
 	path string,
-	param map[string]interface{},
+	param json.Marshaler,
 	header http.Header,
 ) (statusCode int, body []byte, err error) {
 	var request []byte
